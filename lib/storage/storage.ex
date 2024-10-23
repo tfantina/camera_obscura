@@ -10,6 +10,11 @@ defmodule CameraObscura.Storage do
     module = __CALLER__.module
     env_config = Application.get_env(otp_app, module, [])
 
+    IO.inspect(otp_app, label: "--------otp app-----------")
+    IO.inspect(module, label: "--------modile-----------")
+
+    IO.inspect(env_config, label: "--------config--------")
+
     provider =
       case Keyword.get(opts, :provider) || Keyword.get(env_config, :provider) do
         module when is_atom(module) ->
@@ -20,6 +25,8 @@ defmodule CameraObscura.Storage do
             :provider is missing from the storage config, please set a provider
           """
       end
+
+    IO.inspect(provider, label: "--------.[rpvoder----------")
 
     quote do
       @behaviour CameraObscura.Storage

@@ -1,18 +1,10 @@
 defmodule CameraObscura do
-  @moduledoc """
-  Documentation for `CameraObscura`.
-  """
+  @moduledoc false
 
-  @doc """
-  Hello world.
+  use Application
 
-  ## Examples
-
-      iex> CameraObscura.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def start(_type, _args) do
+    children = []
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 end
