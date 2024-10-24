@@ -1,16 +1,15 @@
-CameraObscura 🎞️
+# CameraObscura 🎞️
 
-A WIP Hex project to get image uploads/transformations working on the fly. 
-A lot of this code was ported from an [social network called Ciao](https://github.com/tfantina/ciao_phx) I made a few years back. As such this is very much a WIP.  
+A WIP Hex project for easy image transformations and uploads.
+A lot of this code was ported from a [social network called Ciao](https://github.com/tfantina/ciao_phx) I made a few years back. As such this is very much a WIP.  
 
-The goal of this project is to stop reinventing the wheel when image uploads are required,
-I would like to have a single library I can drop in that will do the work of consuming an
-upload (from LiveView or another source), uploading the raw data to S3 and kicking off a job to create one or multiple image variants. 
+This project leverages tools such as Image, and the user's own S3 uploader  (ExAWS or other), and, eventually Oban. As such I'm not seeking to reinvent the wheel, rather I want to take a few existing wheels and and make a car. Everytime I have to handle user images there is the inevitible issue of users uploading  6000x6000 5 MB images. While LV uploads make handling images a breeze I haven't  found a good way to resize an image, create  additional variants, and upload everything to S3 in one fell swoop.  As such I generally end up writing somehting _like_ CameraObscra in every single project.
 
 ## How it Works
 
-CameraObscura provides a series of behaviours for uploading images to a bucket, transforming those images with the `Image` library, and returning variants of the original image.  
-You can think "Cloudinary in my Elixir app". This met the needs of my little social network where resizing images and cropping to specific aspect ratios was very important.
+CameraObscura provides a series of behaviours for uploading images to a bucket, 
+transforming those images with the `Image` library, and returning variants of the 
+original image. You can think "Cloudinary in my Elixir app". This met the needs of my little social network where resizing images and cropping to specific aspect ratios was very important.
 
 The best documentation is to look at the specific behaviours found in `Provider` and `ImageGenerators`.
 
@@ -36,9 +35,9 @@ posting a to do list with goals for the project:
 
 ## To Do:
 
-- [ ] Migrate `Pipeline` module away from Ecto based transactions 
+- [x] Migrate `Pipeline` module away from Ecto based transactions 
 - [ ] Allow users to pass a specific worker module into the `Pipeline` module to run transforms with a job 
-- [ ] Write a test suite 
+- [ ] Write a test suite - in progress
 - [ ] Allow for variants other than size (B&W)
 - [ ] Generate meta descriptions using Bumblebee?
 
