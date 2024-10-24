@@ -18,11 +18,6 @@ defmodule CameraObscura.Pipeline do
   cropping) and run under an `ImageWorker` job.
   """
 
-  alias CameraObsucra.{Image, ImageStruct}
-  alias Ecto.{Multi, UUID}
-
-  alias Image, as: ImageLibrary
-
   @doc false
   defmacro __using__(opts \\ []) do
     domain = Keyword.get(opts, :domain)
@@ -30,8 +25,12 @@ defmodule CameraObscura.Pipeline do
     app = Keyword.get(opts, :otp_app)
 
     quote do
+      alias CameraObscura.UploadedImage
+      alias CameraObscura.ImageVariant
+      alias Image, as: ImageLibrary
+
       use CameraObscura.Storage, otp_app: unquote(app)
-      @behaviour CameraObscura.Storage
+      @behaviour CameraObscura.ImageGenerators
 
       @doc """
       As parameters
@@ -45,79 +44,61 @@ defmodule CameraObscura.Pipeline do
       """
       @impl true
       def create_image(data, size, opts \\ []) do
-        # Multi.new()
-        # |> put_multi_value(:key, UUID.generate())
-        # |> Multi.run(:upload_photo, fn _, %{key: key} ->
-        #   upload(key, data)
-        # end)
-        # |> Multi.run(:image, fn _, %{upload_photo: key} ->
-        #   %{record: record, size: size, key: key}
-        #   |> create_params()
-        #   |> Map.put(:domain, unquote(domain))
-        #   |> ImageRecord.image_changeset()
-        #   |> Repo.insert()
-        # end)
-        # |> Multi.run(:variants, fn _, %{image: image} ->
-        #   img_job =
-        #     if Keyword.get(opts, :resize, true) do
-        #       image
-        #       |> ImageWorker.new_resize_images()
-        #       |> Oban.insert()
-        #     else
-        #       :no_resize
-        #     end
-
-        {:ok, :img_job}
+        with key when is_binary(key) <- Nanoid.generate(),
+             {:ok, key} <- upload(key, data),
+             image <- %UploadedImage{
+               key: key,
+               domain: unquote(domain),
+               description: Keyword.get(opts, :description),
+               size: size
+             },
+             variants <- Keyword.get(opts, :variants) || unquote(variants),
+             {:ok, variants} <- maybe_create_variants(image, data, variants) do
+          {:ok, %{image | variants: variants}}
+        else
+          err -> {:error, err}
+        end
       end
 
-      # defp create_params(%{user: %{id: user_id}, record: %Post{id: post_id}, size: size, key: key}) do
-      #   %{key: key, size: size, user_id: user_id, post_id: post_id}
-      # end
+      defp maybe_create_variants(image, data, [_ | _] = variants) do
+        variants =
+          Enum.reduce(variants, [], fn variant, acc ->
+            [create_variant(image, data, variant) | acc]
+          end)
 
-      # defp create_params(%{
-      #        user: %{id: user_id},
-      #        record: %Place{id: place_id},
-      #        size: size,
-      #        key: key
-      #      }) do
-      #   %{key: key, size: size, user_id: user_id, place_id: place_id}
-      # end
+        case Enum.any?(variants, &has_error?(&1)) do
+          false -> {:ok, variants}
+          true -> {:error, variants}
+        end
+      end
 
-      # defp create_params(%{user: %{id: user_id}, size: size, key: key}) do
-      #   %{key: key, size: size, user_id: user_id}
-      # end
+      defp maybe_create_variants(_image, _data, _variants), do: {:ok, []}
+
+      defp has_error?({:error, _}), do: true
+      defp has_error?(_), do: false
 
       @doc """
-      Called by resizing jobs, takes a image and a size string (eg. "100x120") and generates
-      a smaller variant.
+      Called by resizing jobs, takes a image and a size string (eg. "100x120") and 
+      generates a smaller variant.
       """
       @impl true
-      def create_variant(img, size) do
-        img
-        # |> Images.get()
-        # |> generate_and_upload_variant(size)
+      def create_variant(image, data, variant) do
+        with {:ok, from_binary} <- ImageLibrary.from_binary(data),
+             {:ok, thumb} <- ImageLibrary.thumbnail(from_binary, variant),
+             {:ok, data} <- ImageLibrary.write(thumb, :memory, suffix: ".jpg"),
+             {:ok, %UploadedImage{} = new_image} <- create_image(data, "0", variants: []) do
+          {:ok,
+           %ImageVariant{
+             key: new_image.key,
+             domain: image.domain,
+             description: image.description,
+             size: new_image.size,
+             parent: image.key
+           }}
+        else
+          err -> {:error, err}
+        end
       end
-
-      # defp generate_and_upload_variant(%{id: id, key: key}, size) do
-      #   with {:ok, image} <- download(key),
-      #        {:ok, image} <- ImageResizeLibrary.open(image),
-      #        {:ok, thumb} <-
-      #          ImageLibrary.thumbnail(image, size, crop: :attention, fit: :cover),
-      #        {:ok, data} <- ImageLibrary.write(thumb, :memory, suffix: ".jpg") do
-      #     @multi
-      #     |> put_multi_value(:key, UUID.generate())
-      #     |> Multi.insert(:variant, fn %{key: key} ->
-      #       %ImageVariant{key: key, dimensions: size, image_id: id}
-      #     end)
-      #     |> Multi.run(:upload_photo, fn _, %{variant: variant, key: key} ->
-      #       upload(key, data)
-      #     end)
-      #     |> Repo.transaction()
-      #   else
-      #     _ ->
-      #       {:error, "Unable to create profile variant"}
-      #   end
-      # end
 
       @doc """
       Gets a list of variant sizes from the macro implementation.

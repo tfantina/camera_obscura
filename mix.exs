@@ -22,6 +22,8 @@ defmodule CameraObscura.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:image, "~> 0.37"},
+      {:nanoid, "~> 2.1.0"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end

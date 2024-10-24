@@ -1,8 +1,7 @@
 import Config
 
-config :camera_obscura,
-  screenshot_on_failure: false,
-  js_errors: true,
-  hackney_options: [timeout: :infinity, recv_timeout: :infinity]
+config :nanoid,
+  size: 12,
+  alphabet: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 import_config "#{config_env()}.exs"

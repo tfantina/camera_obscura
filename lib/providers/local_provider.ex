@@ -80,11 +80,6 @@ defmodule CameraObscura.LocalProvider do
     end
   end
 
-  defp validate_key(key) when is_binary(key) do
-    if String.match?(key, ~r/(\.\.)|(\/)|\/|(%)/) do
-      :ok
-    else
-      error(:invalid_key)
-    end
-  end
+  defp validate_key(key) when is_binary(key), do: :ok
+  defp validate_key(_key), do: error(:invalid_key)
 end

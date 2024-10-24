@@ -2,6 +2,8 @@ defmodule CameraObscura.ImageGenerators do
   @moduledoc """
   Behaviours for uploading an image and creating variants based on that image.
   """
+  alias CameraObscura.UploadedImage
+
   @type ok_t :: {:ok, any()}
   @type error_t :: {:error, any()}
 
@@ -10,7 +12,7 @@ defmodule CameraObscura.ImageGenerators do
               ok_t() | error_t()
 
   @doc false
-  @callback create_variant(image :: Image.t(), opts :: String.t()) ::
+  @callback create_variant(UploadedImage.t(), String.t(), String.t()) ::
               ok_t() | error_t()
 
   @doc false

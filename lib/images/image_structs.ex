@@ -1,6 +1,6 @@
-defmodule CameraObscura.Image do
+defmodule CameraObscura.UploadedImage do
   @moduledoc """
-  An `%Image{}` is the base struct for passing Image data. It is structured to 
+  An `%UploadedImage{}` is the base struct for passing UploadedImage data. It is structured to 
   contain:
     * `key`: which is an identifier, ie. a filename, or an S3 key
     * `domain`: which specifies an S3 bucket or specific model the image is associated with 
@@ -14,7 +14,7 @@ end
 
 defmodule CameraObscura.ImageVariant do
   @moduledoc """
-  An `%ImageVariant{}` contains all the attributes of an `%Image{}` except a list of 
+  An `%ImageVariant{}` contains all the attributes of an `%UploadedImage{}` except a list of 
   associated `variants`, instead we only reference the `parent` by it's key.
   """
   @enforce_keys [:key, :size, :parent]
